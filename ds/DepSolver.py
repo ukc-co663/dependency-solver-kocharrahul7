@@ -21,9 +21,6 @@ mustaddlist = []
 toaddlist = []
 
 
-
-
-
 def dependencies(totalList,item):
 	# print (item)
 	retlist = []

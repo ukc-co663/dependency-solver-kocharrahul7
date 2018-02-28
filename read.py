@@ -2,28 +2,39 @@ import argparse
 import json
 import sys
 
-
-
 def dependencies(initial,item,repository):
 	retlist = []
 	templist = []
-	# print("asdf")
-	# print(item)
 	if len(item["depends"]) != 0:
 		for temp in (item["depends"]):
 			if temp not in initial:
-				# print(temp)
 				temp = redoList(temp,repository)
 				if len(temp) == 1:
+					if "conflicts" in temp:
+						if len(temp["conflicts"])>0:
+							print(temp["conflicts"])
 					retlist.extend(temp)
 				elif len(temp)>1:
 					templist.append(temp)
-	# print(retlist)
+	emptyList = []
+	for item in retlist:
+		emptyList = redoList(item["conflicts"],repository)
 
-	for items in templist:
-		retlist.append(items[0])
+	for ds in templist:
+		z=0
+		for c,d in enumerate(ds,0):
+			for item in emptyList:
+				if d != item: 
+					print (c,d)
+					z=c
+		retlist.append(ds[z])
 
+
+	print(retlist)
 	return retlist
+
+
+
 
 
 
@@ -32,12 +43,11 @@ def control(initial,inputlst,repository):
 		if inp not in initial:
 			dependencys = []
 			if "depends" in inp:
-				dependencys = dependencies(initial,inp,repository) #like next configs
+				dependencys = dependencies(initial,inp,repository)#like next configs
 				# print(dependencys)
 				if len(dependencys)>0:
 					temp = control(inputlst,dependencys,repository)
 					inputlst = temp + inputlst
-	# print(inputlst)
 	return inputlst
 
 def redoList(lst,repository):

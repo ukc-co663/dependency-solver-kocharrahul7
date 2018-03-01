@@ -12,7 +12,7 @@ def dependencies(initial,item,repository):
 				if len(temp) == 1:
 					if "conflicts" in temp:
 						if len(temp["conflicts"])>0:
-							print("conflicts")
+# 							print("conflicts")
 							redoListC(temp["conflicts"])
 					retlist.extend(temp)
 				elif len(temp)>1:
@@ -26,7 +26,7 @@ def dependencies(initial,item,repository):
 		for c,d in enumerate(ds,0):
 			for item in emptyList:
 				if d != item: 
-					print (c,d)
+# 					print (c,d)
 					z=c
 		retlist.append(ds[z])
 
@@ -43,7 +43,7 @@ def control(initial,inputlst,repository):
 			dependencys = []
 			if "depends" in inp:
 				dependencys = dependencies(initial,inp,repository)#like next configs
-				print(dependencys)
+# 				print(dependencys)
 				if len(dependencys)>0:
 					temp = control(inputlst,dependencys,repository)
 					inputlst = temp + inputlst

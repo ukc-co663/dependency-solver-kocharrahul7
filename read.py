@@ -12,8 +12,8 @@ def dependencies(initial,item,repository):
 				if len(temp) == 1:
 					if "conflicts" in temp:
 						if len(temp["conflicts"])>0:
-							continue
-							# print(temp["conflicts"])
+							print("conflicts")
+							redoListC(temp["conflicts"])
 					retlist.extend(temp)
 				elif len(temp)>1:
 					templist.append(temp)
@@ -26,7 +26,7 @@ def dependencies(initial,item,repository):
 		for c,d in enumerate(ds,0):
 			for item in emptyList:
 				if d != item: 
-					# print (c,d)
+					print (c,d)
 					z=c
 		retlist.append(ds[z])
 
@@ -43,7 +43,7 @@ def control(initial,inputlst,repository):
 			dependencys = []
 			if "depends" in inp:
 				dependencys = dependencies(initial,inp,repository)#like next configs
-				# print(dependencys)
+				print(dependencys)
 				if len(dependencys)>0:
 					temp = control(inputlst,dependencys,repository)
 					inputlst = temp + inputlst
@@ -87,6 +87,40 @@ def redoList(lst,repository):
 	return retlist 
 
 
+def redoListC(lst):
+	retlist = []
+	for item in lst:
+		operation = "-"
+		tempstr = item
+		
+		if ">=" in tempstr:
+			versiontype = ">="
+			name, version = tempstr.split(">=")
+		elif "<=" in tempstr:
+			versiontype = "<="
+			name, version = tempstr.split("<=")
+		elif ">" in tempstr:
+			versiontype = ">"
+			name, version = tempstr.split(">")
+		elif "<" in tempstr:
+			versiontype = "<"
+			name, version = tempstr.split("<")
+		elif "=" in tempstr:
+			versiontype = "=="
+			name, version = tempstr.split("=")
+		else:
+			name = tempstr;
+			version = ''
+			versiontype = ''
+		for repo in repository:
+			if (repo["name"] == name and (versiontype =='' or eval(repo["version"]+versiontype+version))):
+				temp = repo
+				temp["operation"] = operation
+				retlist.append(temp)
+	return retlist 
+
+
+
 
 def main():
 	def json_from_file(file_path):
@@ -109,8 +143,9 @@ def main():
 	finallist = []
 	for c in constrList:
 		temp = c["operation"]+c["name"]+"="+c["version"]
-		finallist.append(temp);
-
+		finallist.append(str(temp));
+	# [item.encode('utf-8') for item in finallist]
+	
 	print(finallist)
 
 

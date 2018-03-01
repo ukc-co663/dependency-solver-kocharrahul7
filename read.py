@@ -5,6 +5,8 @@ import sys
 def dependencies(initial,item,repository):
 	retlist = []
 	templist = []
+	conflicts = []
+					
 	if len(item["depends"]) != 0:
 		for temp in (item["depends"]):
 			if temp not in initial:
@@ -12,21 +14,26 @@ def dependencies(initial,item,repository):
 				if len(temp) == 1:
 					if "conflicts" in temp:
 						if len(temp["conflicts"])>0:
-							print("conflicts")
-							redoListC(temp["conflicts"])
+							conflicts = redoListC(temp["conflicts"],repository)
+														
+					retlist.extend(conflicts)
 					retlist.extend(temp)
 				elif len(temp)>1:
 					templist.append(temp)
+	for conf in conflicts:
+		for repo in repository:
+			if (repo["name"] == conf["name"] and (conf["versiontype"] =='' or eval(repo["version"]+conf["versiontype"]+conf["version"]))):
+				print("asdf")
 	emptyList = []
-	for item in retlist:
-		emptyList = redoList(item["conflicts"],repository)
+
+
 
 	for ds in templist:
 		z=0
 		for c,d in enumerate(ds,0):
 			for item in emptyList:
 				if d != item: 
-					print (c,d)
+					# print (c,d)
 					z=c
 		retlist.append(ds[z])
 
@@ -43,7 +50,7 @@ def control(initial,inputlst,repository):
 			dependencys = []
 			if "depends" in inp:
 				dependencys = dependencies(initial,inp,repository)#like next configs
-				print(dependencys)
+				# print(dependencys)
 				if len(dependencys)>0:
 					temp = control(inputlst,dependencys,repository)
 					inputlst = temp + inputlst
@@ -87,7 +94,7 @@ def redoList(lst,repository):
 	return retlist 
 
 
-def redoListC(lst):
+def redoListC(lst,repository):
 	retlist = []
 	for item in lst:
 		operation = "-"

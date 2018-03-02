@@ -145,7 +145,7 @@ def main():
 		temp = c["operation"]+c["name"]+"="+c["version"]
 		finallist.append(temp);
 
-	print(finallist)
+	print(json.dumps(finallist))
 
 
 	

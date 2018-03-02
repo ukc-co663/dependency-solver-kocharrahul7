@@ -5,8 +5,6 @@ import sys
 def dependencies(initial,item,repository):
 	retlist = []
 	templist = []
-	conflicts = []
-					
 	if len(item["depends"]) != 0:
 		for temp in (item["depends"]):
 			if temp not in initial:
@@ -14,19 +12,14 @@ def dependencies(initial,item,repository):
 				if len(temp) == 1:
 					if "conflicts" in temp:
 						if len(temp["conflicts"])>0:
-							conflicts = redoListC(temp["conflicts"],repository)
-														
-					retlist.extend(conflicts)
+							# print("conflicts")
+							redoListC(temp["conflicts"])
 					retlist.extend(temp)
 				elif len(temp)>1:
 					templist.append(temp)
-	for conf in conflicts:
-		for repo in repository:
-			if (repo["name"] == conf["name"] and (conf["versiontype"] =='' or eval(repo["version"]+conf["versiontype"]+conf["version"]))):
-				print("asdf")
 	emptyList = []
-
-
+	for item in retlist:
+		emptyList = redoList(item["conflicts"],repository)
 
 	for ds in templist:
 		z=0
@@ -94,7 +87,7 @@ def redoList(lst,repository):
 	return retlist 
 
 
-def redoListC(lst,repository):
+def redoListC(lst):
 	retlist = []
 	for item in lst:
 		operation = "-"
@@ -150,9 +143,8 @@ def main():
 	finallist = []
 	for c in constrList:
 		temp = c["operation"]+c["name"]+"="+c["version"]
-		finallist.append(str(temp));
-	# [item.encode('utf-8') for item in finallist]
-	
+		finallist.append(temp);
+
 	print(finallist)
 
 

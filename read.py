@@ -7,6 +7,7 @@ def dependencies(initial,item,repository):
 	retlist = []
 	templist = []
 	conflist = []
+
 	if len(item["depends"]) != 0:
 		for temp in (item["depends"]):
 			if temp not in initial:
@@ -27,7 +28,6 @@ def dependencies(initial,item,repository):
 	for item in emptyList:
 		retlist.append(item)
 	
-
 
 	for ds in templist:
 		noConflictList = []
@@ -166,7 +166,15 @@ def redoList(lst,repository):
 			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
 				temp = repo
 				temp["operation"] = operation
-				retlist.append(temp)
+				if len(retlist)==0:
+					retlist.append(temp)
+				for c,ret in enumerate(retlist,0):
+					if  temp["name"]==ret["name"]:
+						if temp["size"] < ret["size"]:
+							retlist.remove(ret)
+							retlist.insert(c,temp)
+					else:
+						retlist.append(temp)
 	return retlist 
 
 def solve(ver1,vert,ver2,):
@@ -214,7 +222,15 @@ def redoListC(lst,repository):
 			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
 				temp = repo
 				temp["operation"] = operation
-				retlist.append(temp)
+				if len(retlist)==0:
+					retlist.append(temp)
+				for c,ret in enumerate(retlist,0):
+					if  temp["name"]==ret["name"]:
+						if temp["size"] < ret["size"]:
+							retlist.remove(ret)
+							retlist.insert(c,temp)
+					else:
+						retlist.append(temp)
 	return retlist 
 
 

@@ -128,7 +128,7 @@ def redoListC(lst):
 			version = ''
 			versiontype = ''
 		for repo in repository:
-			if (repo["name"] == name and (versiontype =='' or eval(repo["version"]+versiontype+version))):
+			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
 				temp = repo
 				temp["operation"] = operation
 				retlist.append(temp)

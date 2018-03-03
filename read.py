@@ -4,7 +4,6 @@ import sys
 from pkg_resources import parse_version
 
 def dependencies(initial,item,repository):
-	# print(item)
 	retlist = []
 	templist = []
 	conflist = []
@@ -102,7 +101,6 @@ def dealWithDepends(lst,repository,initial,item):
 def dealWithConflicts(lst,repository,initial,inpt):
 	templist = []
 	finallist = []
-	print(inpt)
 	for item in lst:
 		finallist.append(redoListC(item["conflicts"],repository))
 	min = 99999

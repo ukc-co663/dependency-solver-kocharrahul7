@@ -4,8 +4,10 @@ import sys
 from pkg_resources import parse_version
 
 def dependencies(initial,item,repository):
+	# print(item)
 	retlist = []
 	templist = []
+	conflist = []
 	if len(item["depends"]) != 0:
 		for temp in (item["depends"]):
 			if temp not in initial:
@@ -13,28 +15,111 @@ def dependencies(initial,item,repository):
 				if len(temp) == 1:
 					if "conflicts" in temp:
 						if len(temp["conflicts"])>0:
-							redoListC(temp["conflicts"])
+							conflist.extend(redoListC(temp["conflicts"]))
 					retlist.extend(temp)
 				elif len(temp)>1:
 					templist.append(temp)
 	emptyList = []
 	for item in retlist:
-		emptyList = redoList(item["conflicts"],repository)
+		if "conflicts" in item:
+			if len(item["conflicts"])>0:
+				emptyList.extend(redoListC(item["conflicts"],repository))
+	
+	for item in emptyList:
+		retlist.append(item)
+	
+
 
 	for ds in templist:
-		z=0
-		for c,d in enumerate(ds,0):
-			for item in emptyList:
-				if d != item: 
-					# print (c,d)
-					z=c
-		retlist.append(ds[z])
+		noConflictList = []
+		haveConflictsList = []
+		conflictedIndependent=[]
+		conflictedDependent=[]
+		noConflictedIndependent=[]
+		noConflictedDependent=[]
+		finalList = []
+		for d in ds:
+			if("conflicts" not in d):
+				noConflictList.append(d)
+			else:
+				haveConflictsList.append(d)
+
+		if(len(noConflictList)==1):
+			retlist.extend(noConflictList)
+		elif(len(noConflictList)>1):
+			for noConflict in noConflictList:
+				if("depends" not in noConflict):
+					noConflictedIndependent.append(noConflict)
+				else:
+					noConflictedDependent.append(noConflict)
+		elif(len(haveConflictsList)==1):
+			retlist.extend(haveConflictsList[0])
+		elif(len(haveConflictsList)>1):
+			for haveConflicts in haveConflictsList:
+				if("depends" not in haveConflicts):
+					conflictedIndependent.append(haveConflicts)
+				else:
+					conflictedDependent.append(haveConflicts)
+
+		if(len(noConflictedIndependent)>=1):
+			retlist.append(noConflictedIndependent[0])
+		elif(len(noConflictedDependent)>=1):
+			retlist.extend(dealWithDepends(noConflictedDependent,repository,initial,item))
+		elif(len(conflictedIndependent)>=1):
+			retlist.extend(dealWithConflicts(conflictedIndependent,repository,initial,item))
+		elif(len(conflictedDependent)>=1):
+			retlist.extend(dealWithConflicts(conflictedDependent,repository,initial,item))
+
 
 	return retlist
 
+def dealWithDepends(lst,repository,initial,item):
+	templist = []
+	finallist = []
+	for item in lst:
+		interemList = []
+		for i in item["depends"]:
+			interemList.append(redoList(i,repository))
+		finallist.append(interemList)
+
+	for f in finallist:
+		if f in initial:
+			finallist.remove(f)
 
 
+	min = 99999
+	z = 0;
+	for c,thing in enumerate(finallist,0):
+		if(len(thing)<min):
+			min = len(thing)
+			z = c
 
+	retlist = []
+	retlist.extend(finallist[z][0])
+	retlist.append(lst[z])
+	return(retlist)
+
+def dealWithConflicts(lst,repository,initial,inpt):
+	templist = []
+	finallist = []
+	print(inpt)
+	for item in lst:
+		finallist.append(redoListC(item["conflicts"],repository))
+	min = 99999
+	z = 0;
+
+	for f in finallist:
+		if f in initial or inpt in finallist:
+			finallist.remove(f)
+
+	for c,thing in enumerate(finallist,0):
+		if(len(thing)<min):
+			min = len(thing)
+			z = c
+	retlist = []
+	retlist.append(finallist[z][0])
+	retlist.append(lst[z])
+	return(retlist)
 
 
 def control(initial,inputlst,repository):
@@ -42,8 +127,7 @@ def control(initial,inputlst,repository):
 		if inp not in initial:
 			dependencys = []
 			if "depends" in inp:
-				dependencys = dependencies(initial,inp,repository)#like next configs
-				# print(dependencys)
+				dependencys = dependencies(initial,inp,repository)
 				if len(dependencys)>0:
 					temp = control(inputlst,dependencys,repository)
 					inputlst = temp + inputlst
@@ -102,7 +186,7 @@ def solve(ver1,vert,ver2,):
 
 
 
-def redoListC(lst):
+def redoListC(lst,repository):
 	retlist = []
 	for item in lst:
 		operation = "-"

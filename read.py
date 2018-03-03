@@ -61,18 +61,19 @@ def dependencies(initial,item,repository):
 					conflictedDependent.append(haveConflicts)
 
 		if(len(noConflictedIndependent)>=1):
-			retlist.append(noConflictedIndependent[0])
+			if(noConflictedIndependent[0] not in initial):
+				retlist.append(noConflictedIndependent[0])
 		elif(len(noConflictedDependent)>=1):
-			retlist.extend(dealWithDepends(noConflictedDependent,repository,initial,item))
+			retlist.extend(dealWithDepends(noConflictedDependent,repository,initial))
 		elif(len(conflictedIndependent)>=1):
-			retlist.extend(dealWithConflicts(conflictedIndependent,repository,initial,item))
+			retlist.extend(dealWithConflicts(conflictedIndependent,repository,initial))
 		elif(len(conflictedDependent)>=1):
-			retlist.extend(dealWithConflicts(conflictedDependent,repository,initial,item))
+			retlist.extend(dealWithConflicts(conflictedDependent,repository,initial))
 
 
 	return retlist
 
-def dealWithDepends(lst,repository,initial,item):
+def dealWithDepends(lst,repository,initial):
 	templist = []
 	finallist = []
 	for item in lst:
@@ -98,7 +99,7 @@ def dealWithDepends(lst,repository,initial,item):
 	retlist.append(lst[z])
 	return(retlist)
 
-def dealWithConflicts(lst,repository,initial,inpt):
+def dealWithConflicts(lst,repository,initial):
 	templist = []
 	finallist = []
 	for item in lst:

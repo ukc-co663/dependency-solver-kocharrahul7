@@ -1,6 +1,7 @@
 import argparse
 import json
 import sys
+from pkg_resources import parse_version
 
 def dependencies(initial,item,repository):
 	retlist = []
@@ -12,7 +13,6 @@ def dependencies(initial,item,repository):
 				if len(temp) == 1:
 					if "conflicts" in temp:
 						if len(temp["conflicts"])>0:
-							# print("conflicts")
 							redoListC(temp["conflicts"])
 					retlist.extend(temp)
 				elif len(temp)>1:
@@ -80,11 +80,26 @@ def redoList(lst,repository):
 			versiontype = ''
 
 		for repo in repository:
-			if (repo["name"] == name and (versiontype =='' or eval(repo["version"]+versiontype+version))):
+			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
 				temp = repo
 				temp["operation"] = operation
 				retlist.append(temp)
 	return retlist 
+
+def solve(ver1,vert,ver2,):
+	s1="\""+str(ver1)+"\""
+	s2="\""+str(ver2)+"\""
+	if(vert=="<"):
+		return parse_version(s1) < parse_version(s2)
+	elif(vert==">"):
+		return parse_version(s1) > parse_version(s2)
+	elif(vert=="<="):
+		return parse_version(s1) <= parse_version(s2)
+	elif(vert==">="):
+		return parse_version(s1) >= parse_version(s2)
+	elif(vert=="=="):
+		return parse_version(s1) == parse_version(s2)
+
 
 
 def redoListC(lst):

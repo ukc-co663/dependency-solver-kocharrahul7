@@ -1,7 +1,12 @@
 import argparse
 import json
 import sys
-from pkg_resources import parse_version
+
+
+def versiontuple(v):
+    return tuple(map(int, (v.split("."))))
+
+
 
 def dependencies(initial,item,repository):
 	retlist = []
@@ -64,11 +69,11 @@ def dependencies(initial,item,repository):
 			if(noConflictedIndependent[0] not in initial):
 				retlist.append(noConflictedIndependent[0])
 		elif(len(noConflictedDependent)>=1):
-			retlist.extend(dealWithDepends(noConflictedDependent,repository,initial))
+			retlist.extend(dealWithDepends(noConflictedDependent,repository))
 		elif(len(conflictedIndependent)>=1):
-			retlist.extend(dealWithConflicts(conflictedIndependent,repository,initial))
+			retlist.extend(dealWithConflicts(conflictedIndependent,repository))
 		elif(len(conflictedDependent)>=1):
-			retlist.extend(dealWithConflicts(conflictedDependent,repository,initial))
+			retlist.extend(dealWithConflicts(conflictedDependent,repository))
 
 
 	return retlist
@@ -136,17 +141,17 @@ def dealWithConflicts(lst,repository,initial):
 	return(retlist)
 
 
-def control(initial,inputlst,repository):
+def control(previous,inputlst,repository):
 	for inp in inputlst:
-		if inp not in initial:
+		if inp not in previous:
 			dependencys = []	
 			if "depends" in inp:
-				dependencys = dependencies(initial,inp,repository)
+				dependencys = dependencies(previous,inp,repository)
 				if len(dependencys)>0:
 					temp = control(inputlst,dependencys,repository)
 					inputlst = temp + inputlst
 			elif "conflicts" in inp:
-				dependencys = conf(initial,inp,repository)
+				dependencys = conf(previous,inp,repository)
 				if len(dependencys)>0:
 					temp = control(inputlst,dependencys,repository)
 					inputlst = temp + inputlst
@@ -203,15 +208,15 @@ def solve(ver1,vert,ver2,):
 	s1="\""+str(ver1)+"\""
 	s2="\""+str(ver2)+"\""
 	if(vert=="<"):
-		return parse_version(s1) < parse_version(s2)
+		return versiontuple(s1) < versiontuple(s2)
 	elif(vert==">"):
-		return parse_version(s1) > parse_version(s2)
+		return versiontuple(s1) > versiontuple(s2)
 	elif(vert=="<="):
-		return parse_version(s1) <= parse_version(s2)
+		return versiontuple(s1) <= versiontuple(s2)
 	elif(vert==">="):
-		return parse_version(s1) >= parse_version(s2)
+		return versiontuple(s1) >= versiontuple(s2)
 	elif(vert=="=="):
-		return parse_version(s1) == parse_version(s2)
+		return versiontuple(s1) == versiontuple(s2)
 
 
 
@@ -260,12 +265,7 @@ def removeDupes(lst):
 	for item in lst:
 		if item not in retlist:
 			retlist.append(item)
-		# else:
-			# if item["operation"] == "+":
-				#check for minus between the start and the current point
-			# else:
-				# check for plus between the start and the current point
-
+	return retlist
 
 def main():
 	def json_from_file(file_path):
@@ -287,7 +287,7 @@ def main():
 	constrList = control(initial,constraints,repository)
 	finallist = []
 
-	removeDupes(constrList)
+	constrList = removeDupes(constrList)
 
 	for c in constrList:
 		temp = c["operation"]+c["name"]+"="+c["version"]

@@ -264,6 +264,20 @@ def removeDupes(lst):
 			retlist.append(item)
 	return retlist
 
+def removeUnecessary(lst,initial):#removes all unncessary conflicts
+	templst = initial + lst;
+	retlist = []
+	for c,temp in enumerate(templst,0):
+		if temp["operation"] != "-":
+			retlist.append(temp)
+		else:
+			for z in templst[:(c)]:
+				if z["name"] == temp["name"] and z["operation"] != temp["operation"]:
+					retlist.append(z)
+	return retlist
+
+
+
 def main():
 	def json_from_file(file_path):
 		with open(file_path) as f:
@@ -285,6 +299,7 @@ def main():
 	finallist = []
 
 	constrList = removeDupes(constrList)
+	constrList = removeUnecessary(constrList,initial)
 
 	for c in constrList:
 		temp = c["operation"]+c["name"]+"="+c["version"]

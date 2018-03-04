@@ -69,7 +69,7 @@ def dependencies(initial,item,repository):
 				elif(len(conflictedDependent)>=1):
 					retlist.extend(dealWithConflicts(conflictedDependent,repository,initial))
 				break
-	print(retlist)
+	# print(retlist)
 	return retlist
 
 
@@ -248,7 +248,7 @@ def redoListC(lst,repository):
 				temp = repo
 				temp["operation"] = operation
 				templist.append(temp)
-		print(templist)
+		# print(templist)
 		if(len(templist)>0):
 			item = templist[0]
 			if(len(templist)>1):

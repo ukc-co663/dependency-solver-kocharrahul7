@@ -1,10 +1,7 @@
 import argparse
 import json
 import sys
-
-
-def versiontuple(v):
-    return tuple(map(int, (v.split("."))))
+from distutils.version import LooseVersion
 
 
 
@@ -69,11 +66,11 @@ def dependencies(initial,item,repository):
 			if(noConflictedIndependent[0] not in initial):
 				retlist.append(noConflictedIndependent[0])
 		elif(len(noConflictedDependent)>=1):
-			retlist.extend(dealWithDepends(noConflictedDependent,repository))
+			retlist.extend(dealWithDepends(noConflictedDependent,repository,initial))
 		elif(len(conflictedIndependent)>=1):
-			retlist.extend(dealWithConflicts(conflictedIndependent,repository))
+			retlist.extend(dealWithConflicts(conflictedIndependent,repository,initial))
 		elif(len(conflictedDependent)>=1):
-			retlist.extend(dealWithConflicts(conflictedDependent,repository))
+			retlist.extend(dealWithConflicts(conflictedDependent,repository,initial))
 
 
 	return retlist
@@ -208,15 +205,15 @@ def solve(ver1,vert,ver2,):
 	s1="\""+str(ver1)+"\""
 	s2="\""+str(ver2)+"\""
 	if(vert=="<"):
-		return versiontuple(s1) < versiontuple(s2)
+		return LooseVersion(ver1) < LooseVersion(ver2)
 	elif(vert==">"):
-		return versiontuple(s1) > versiontuple(s2)
+		return LooseVersion(ver1) > LooseVersion(ver2)
 	elif(vert=="<="):
-		return versiontuple(s1) <= versiontuple(s2)
+		return LooseVersion(ver1) <= LooseVersion(ver2)
 	elif(vert==">="):
-		return versiontuple(s1) >= versiontuple(s2)
+		return LooseVersion(ver1) >= LooseVersion(ver2)
 	elif(vert=="=="):
-		return versiontuple(s1) == versiontuple(s2)
+		return LooseVersion(ver1) == LooseVersion(ver2)
 
 
 

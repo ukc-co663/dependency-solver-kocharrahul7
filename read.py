@@ -9,7 +9,6 @@ def dependencies(initial,item,repository):
 	retlist = []
 	templist = []
 	conflist = []
-
 	if len(item["depends"]) != 0:
 		for temp in (item["depends"]):
 			if temp not in initial:
@@ -161,6 +160,7 @@ def redoListF(lst,repository):
 			if(item[0] == '+' or item[0] == '-'):
 				operation = item[0]
 				tempstr = item[1:]
+
 			else:
 				operation = "+"
 				tempstr = item
@@ -183,7 +183,6 @@ def redoListF(lst,repository):
 			name = tempstr;
 			version = ''
 			versiontype = ''
-
 		for repo in repository:
 			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
 				temp = repo
@@ -198,7 +197,7 @@ def redoListF(lst,repository):
 							retlist.insert(c,temp)
 					else:
 						retlist.append(temp)
-						# fix remove dupes and then call it here
+	 					# fix remove dupes and then call it here
 	return retlist 
 
 
@@ -300,7 +299,7 @@ def removeDupes(lst):
 
 def removeUnecessary(lst,initial):#removes all unncessary conflicts
 	templst = initial + lst;
-	retlist = []
+	retlist = initial
 	for c,temp in enumerate(templst,0):
 		if temp["operation"] != "-":
 			retlist.append(temp)
@@ -327,12 +326,14 @@ def main():
 	initial = (args.initial_arg)
 	constraints = (args.constraints_arg)
 
-	initial = redoListF(initial,repository)
+	initial = redoList(initial,repository)
+	init = initial 
+
 	constraints = redoListF(constraints,repository)
 	constrList = control(initial,constraints,repository)
 	finallist = []
-
 	constrList = removeDupes(constrList)
+
 	constrList = removeUnecessary(constrList,initial)
 
 	for c in constrList:

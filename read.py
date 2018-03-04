@@ -28,49 +28,39 @@ def dependencies(initial,item,repository):
 				break
 			elif s in globalConflict:
 				t.remove(s)
-			else:
-				noConflictList = []
-				haveConflictsList = []
-				conflictedIndependent=[]
-				conflictedDependent=[]
-				noConflictedIndependent=[]
-				noConflictedDependent=[]
-				finalList = []
-				for d in t:
-					if("conflicts" not in d):
-						noConflictList.append(d)
-					else:
-						haveConflictsList.append(d)
-
-				if(len(noConflictList)==1):
-					retlist.extend(noConflictList)
-				elif(len(noConflictList)>1):
-					for noConflict in noConflictList:
-						if("depends" not in noConflict):
-							noConflictedIndependent.append(noConflict)
-						else:
-							noConflictedDependent.append(noConflict)
-				elif(len(haveConflictsList)==1):
-					retlist.extend(haveConflictsList[0])
-				elif(len(haveConflictsList)>1):
-					for haveConflicts in haveConflictsList:
-						if("depends" not in haveConflicts):
-							conflictedIndependent.append(haveConflicts)
-						else:
-							conflictedDependent.append(haveConflicts)
-
-				if(len(noConflictedIndependent)>=1):
-					if(noConflictedIndependent[0] not in initial):
-						retlist.append(noConflictedIndependent[0])
-				elif(len(noConflictedDependent)>=1):
-					retlist.extend(dealWithDepends(noConflictedDependent,repository,initial))
-				elif(len(conflictedIndependent)>=1):
-					retlist.extend(dealWithConflicts(conflictedIndependent,repository,initial))
-				elif(len(conflictedDependent)>=1):
-					retlist.extend(dealWithConflicts(conflictedDependent,repository,initial))
+		for ds in t:
+			deplist = []
+			conlist = []
+			bothlist = []
+			if "conflicts" not in ds and "depends" not in ds:
+				retlist.extend(temp)
+				globalDepends.extend(temp)
 				break
-	# print(retlist)
+			elif "conflicts" not in ds:
+				# print("has only depends")
+				deplist.append(ds)
+			elif "depends" not in ds:
+				# print("has only conflist")
+				conlist.append(ds)
+			else:
+				# print("has both")
+				bothlist
+			if len(deplist)==1:
+				# print(deplist)
+				retlist.extend(deplist)
+				break
+			elif len(conlist)==1:
+				# print(conlist)
+				retlist.extend(conlist)
+			elif len(bothlist)==1:
+				# print(bothlist)
+				retlist.extend(bothlist)
+			# print(deplist)
+			# print(conlist)
+			# print(bothlist)
 	return retlist
+
+
 
 
 def conf(initial,item,repository):
@@ -79,13 +69,16 @@ def conf(initial,item,repository):
 	conflist = []
 
 	if len(item["conflicts"]) != 0:
-		for temp in (item["conflicts"]):
-			if temp not in globalConflict:
-				temp = redoListC(temp,repository)
-				for t in temp:
-					if t not in globalDepends:
-						retlist.append(t)
-						globalConflict.append(t)
+		temp = (item["conflicts"])
+		# print(temp)
+		tmp = redoListC(temp,repository)
+		# print(tmp)
+		z = tmp
+		z[0]["operation"] = '+'
+		if z in globalDepends and z not in globalConflict:
+			for t in tmp:
+				retlist.append(t)
+				globalConflict.append(t)
 	return retlist
 
 
@@ -248,16 +241,20 @@ def redoListC(lst,repository):
 				temp = repo
 				temp["operation"] = operation
 				templist.append(temp)
-		# print(templist)
-		if(len(templist)>0):
-			item = templist[0]
-			if(len(templist)>1):
-				for t in templist:
-					if t["size"]<item["size"]:
-						item = t
-			retlist.append(item)
+		item = templist[0]
+		if(len(templist)>1):
+			for t in templist:
+				if t["size"]<item["size"]:
+					item = t
+		retlist.append(item)
 	return retlist 
 
+def removeDupes(lst):
+	retlist = []
+	for l in lst:
+		if l not in retlist:
+			retlist.append(l)
+	return retlist
 
 
 def main():
@@ -280,6 +277,8 @@ def main():
 
 	constraints = redoList(constraints,repository)
 	constrList = control(initial,constraints,repository)
+
+	constrList = removeDupes(constrList)
 
 	finallist = []
 	for c in constrList:

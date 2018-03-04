@@ -73,6 +73,24 @@ def dependencies(initial,item,repository):
 
 	return retlist
 
+
+def conf(initial,item,repository):
+	retlist = []
+	templist = []
+	conflist = []
+
+	if len(item["conflicts"]) != 0:
+		for temp in (item["conflicts"]):
+			if temp not in initial:
+				temp = redoListC(temp,repository)
+				retlist.extend(temp)
+
+
+	return retlist
+
+
+
+
 def dealWithDepends(lst,repository,initial):
 	templist = []
 	finallist = []
@@ -103,13 +121,10 @@ def dealWithConflicts(lst,repository,initial):
 	templist = []
 	finallist = []
 	for item in lst:
-		finallist.append(redoListC(item["conflicts"],repository))
+		if item not in initial:
+			finallist.append(redoListC(item["conflicts"],repository))
 	min = 99999
 	z = 0;
-
-	for f in finallist:
-		if f in initial or inpt in finallist:
-			finallist.remove(f)
 
 	for c,thing in enumerate(finallist,0):
 		if(len(thing)<min):
@@ -124,9 +139,14 @@ def dealWithConflicts(lst,repository,initial):
 def control(initial,inputlst,repository):
 	for inp in inputlst:
 		if inp not in initial:
-			dependencys = []
+			dependencys = []	
 			if "depends" in inp:
 				dependencys = dependencies(initial,inp,repository)
+				if len(dependencys)>0:
+					temp = control(inputlst,dependencys,repository)
+					inputlst = temp + inputlst
+			elif "conflicts" in inp:
+				dependencys = conf(initial,inp,repository)
 				if len(dependencys)>0:
 					temp = control(inputlst,dependencys,repository)
 					inputlst = temp + inputlst
@@ -168,6 +188,7 @@ def redoList(lst,repository):
 				temp["operation"] = operation
 				if len(retlist)==0:
 					retlist.append(temp)
+				
 				for c,ret in enumerate(retlist,0):
 					if  temp["name"]==ret["name"]:
 						if temp["size"] < ret["size"]:
@@ -175,6 +196,7 @@ def redoList(lst,repository):
 							retlist.insert(c,temp)
 					else:
 						retlist.append(temp)
+						# fix remove dupes and then call it here
 	return retlist 
 
 def solve(ver1,vert,ver2,):
@@ -233,7 +255,16 @@ def redoListC(lst,repository):
 						retlist.append(temp)
 	return retlist 
 
-
+def removeDupes(lst):
+	retlist = []
+	for item in lst:
+		if item not in retlist:
+			retlist.append(item)
+		# else:
+			# if item["operation"] == "+":
+				#check for minus between the start and the current point
+			# else:
+				# check for plus between the start and the current point
 
 
 def main():
@@ -255,6 +286,9 @@ def main():
 	constraints = redoList(constraints,repository)
 	constrList = control(initial,constraints,repository)
 	finallist = []
+
+	removeDupes(constrList)
+
 	for c in constrList:
 		temp = c["operation"]+c["name"]+"="+c["version"]
 		finallist.append(temp);

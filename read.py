@@ -37,27 +37,18 @@ def dependencies(initial,item,repository):
 				globalDepends.extend(temp)
 				break
 			elif "conflicts" not in ds:
-				# print("has only depends")
 				deplist.append(ds)
 			elif "depends" not in ds:
-				# print("has only conflist")
 				conlist.append(ds)
 			else:
-				# print("has both")
 				bothlist
 			if len(deplist)==1:
-				# print(deplist)
 				retlist.extend(deplist)
 				break
 			elif len(conlist)==1:
-				# print(conlist)
 				retlist.extend(conlist)
 			elif len(bothlist)==1:
-				# print(bothlist)
 				retlist.extend(bothlist)
-			# print(deplist)
-			# print(conlist)
-			# print(bothlist)
 	return retlist
 
 
@@ -67,18 +58,16 @@ def conf(initial,item,repository):
 	retlist = []
 	templist = []
 	conflist = []
-
 	if len(item["conflicts"]) != 0:
 		temp = (item["conflicts"])
-		# print(temp)
 		tmp = redoListC(temp,repository)
-		# print(tmp)
-		z = tmp
-		z[0]["operation"] = '+'
-		if z in globalDepends and z not in globalConflict:
-			for t in tmp:
-				retlist.append(t)
-				globalConflict.append(t)
+		for z in tmp:
+			x = z
+			x["operation"] = '+'
+			if x in globalDepends or x in initial:
+				x["operation"] = '-'
+				retlist.append(z)
+				globalConflict.append(z)
 	return retlist
 
 
@@ -240,13 +229,7 @@ def redoListC(lst,repository):
 			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
 				temp = repo
 				temp["operation"] = operation
-				templist.append(temp)
-		item = templist[0]
-		if(len(templist)>1):
-			for t in templist:
-				if t["size"]<item["size"]:
-					item = t
-		retlist.append(item)
+				retlist.append(temp)
 	return retlist 
 
 def removeDupes(lst):

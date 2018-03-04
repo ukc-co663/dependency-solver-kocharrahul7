@@ -3,6 +3,8 @@ import json
 import sys
 from distutils.version import LooseVersion
 
+globalConflict = []
+globalDepends = []
 
 
 def dependencies(initial,item,repository):
@@ -11,67 +13,63 @@ def dependencies(initial,item,repository):
 	conflist = []
 	if len(item["depends"]) != 0:
 		for temp in (item["depends"]):
-			if temp not in initial:
+			if temp not in globalDepends:
 				temp = redoList(temp,repository)
 				if len(temp) == 1:
-					if "conflicts" in temp:
-						if len(temp["conflicts"])>0:
-							conflist.extend(redoListC(temp["conflicts"]))
-					retlist.extend(temp)
+					if temp[0] not in globalDepends:
+						retlist.extend(temp)
+						globalDepends.extend(temp)
 				elif len(temp)>1:
-					templist.append(temp)
-	emptyList = []
-	for item in retlist:
-		if "conflicts" in item:
-			if len(item["conflicts"])>0:
-				emptyList.extend(redoListC(item["conflicts"],repository))
-	
-	for item in emptyList:
-		retlist.append(item)
-	
-
-	for ds in templist:
-		noConflictList = []
-		haveConflictsList = []
-		conflictedIndependent=[]
-		conflictedDependent=[]
-		noConflictedIndependent=[]
-		noConflictedDependent=[]
-		finalList = []
-		for d in ds:
-			if("conflicts" not in d):
-				noConflictList.append(d)
+					if temp not in templist:
+						templist.append(temp)
+	for t in templist:
+		for s in t:
+			if s in globalDepends:
+				break
+			elif s in globalConflict:
+				t.remove(s)
 			else:
-				haveConflictsList.append(d)
+				noConflictList = []
+				haveConflictsList = []
+				conflictedIndependent=[]
+				conflictedDependent=[]
+				noConflictedIndependent=[]
+				noConflictedDependent=[]
+				finalList = []
+				for d in t:
+					if("conflicts" not in d):
+						noConflictList.append(d)
+					else:
+						haveConflictsList.append(d)
 
-		if(len(noConflictList)==1):
-			retlist.extend(noConflictList)
-		elif(len(noConflictList)>1):
-			for noConflict in noConflictList:
-				if("depends" not in noConflict):
-					noConflictedIndependent.append(noConflict)
-				else:
-					noConflictedDependent.append(noConflict)
-		elif(len(haveConflictsList)==1):
-			retlist.extend(haveConflictsList[0])
-		elif(len(haveConflictsList)>1):
-			for haveConflicts in haveConflictsList:
-				if("depends" not in haveConflicts):
-					conflictedIndependent.append(haveConflicts)
-				else:
-					conflictedDependent.append(haveConflicts)
+				if(len(noConflictList)==1):
+					retlist.extend(noConflictList)
+				elif(len(noConflictList)>1):
+					for noConflict in noConflictList:
+						if("depends" not in noConflict):
+							noConflictedIndependent.append(noConflict)
+						else:
+							noConflictedDependent.append(noConflict)
+				elif(len(haveConflictsList)==1):
+					retlist.extend(haveConflictsList[0])
+				elif(len(haveConflictsList)>1):
+					for haveConflicts in haveConflictsList:
+						if("depends" not in haveConflicts):
+							conflictedIndependent.append(haveConflicts)
+						else:
+							conflictedDependent.append(haveConflicts)
 
-		if(len(noConflictedIndependent)>=1):
-			if(noConflictedIndependent[0] not in initial):
-				retlist.append(noConflictedIndependent[0])
-		elif(len(noConflictedDependent)>=1):
-			retlist.extend(dealWithDepends(noConflictedDependent,repository,initial))
-		elif(len(conflictedIndependent)>=1):
-			retlist.extend(dealWithConflicts(conflictedIndependent,repository,initial))
-		elif(len(conflictedDependent)>=1):
-			retlist.extend(dealWithConflicts(conflictedDependent,repository,initial))
-
-
+				if(len(noConflictedIndependent)>=1):
+					if(noConflictedIndependent[0] not in initial):
+						retlist.append(noConflictedIndependent[0])
+				elif(len(noConflictedDependent)>=1):
+					retlist.extend(dealWithDepends(noConflictedDependent,repository,initial))
+				elif(len(conflictedIndependent)>=1):
+					retlist.extend(dealWithConflicts(conflictedIndependent,repository,initial))
+				elif(len(conflictedDependent)>=1):
+					retlist.extend(dealWithConflicts(conflictedDependent,repository,initial))
+				break
+	print(retlist)
 	return retlist
 
 
@@ -82,11 +80,12 @@ def conf(initial,item,repository):
 
 	if len(item["conflicts"]) != 0:
 		for temp in (item["conflicts"]):
-			if temp not in initial:
+			if temp not in globalConflict:
 				temp = redoListC(temp,repository)
-				retlist.extend(temp)
-
-
+				for t in temp:
+					if t not in globalDepends:
+						retlist.append(t)
+						globalConflict.append(t)
 	return retlist
 
 
@@ -139,66 +138,20 @@ def dealWithConflicts(lst,repository,initial):
 
 def control(previous,inputlst,repository):
 	for inp in inputlst:
-		if inp not in previous:
-			dependencys = []	
-			if "depends" in inp:
-				dependencys = dependencies(previous,inp,repository)
-				if len(dependencys)>0:
-					temp = control(inputlst,dependencys,repository)
-					inputlst = temp + inputlst
-			elif "conflicts" in inp:
-				dependencys = conf(previous,inp,repository)
-				if len(dependencys)>0:
-					temp = control(inputlst,dependencys,repository)
-					inputlst = temp + inputlst
+		dependencys = []
+		conflicts = []
+		if "depends" in inp:
+			dependencys = dependencies(previous,inp,repository)
+			if len(dependencys)>0:
+				temp = control(inputlst,dependencys,repository)
+				inputlst = temp + inputlst
+		if "conflicts" in inp:
+			conflicts = conf(previous,inp,repository)
+			if len(conflicts)>0:
+				temp = control(inputlst,conflicts,repository)
+				inputlst = temp + inputlst
 	return inputlst
 
-def redoListF(lst,repository):
-	retlist = []
-	for item in lst:
-		if "operation" not in item:
-			if(item[0] == '+' or item[0] == '-'):
-				operation = item[0]
-				tempstr = item[1:]
-
-			else:
-				operation = "+"
-				tempstr = item
-		if ">=" in tempstr:
-			versiontype = ">="
-			name, version = tempstr.split(">=")
-		elif "<=" in tempstr:
-			versiontype = "<="
-			name, version = tempstr.split("<=")
-		elif ">" in tempstr:
-			versiontype = ">"
-			name, version = tempstr.split(">")
-		elif "<" in tempstr:
-			versiontype = "<"
-			name, version = tempstr.split("<")
-		elif "=" in tempstr:
-			versiontype = "=="
-			name, version = tempstr.split("=")
-		else:
-			name = tempstr;
-			version = ''
-			versiontype = ''
-		for repo in repository:
-			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
-				temp = repo
-				temp["operation"] = operation
-				if len(retlist)==0:
-					retlist.append(temp)
-				
-				for c,ret in enumerate(retlist,0):
-					if  temp["name"]==ret["name"]:
-						if temp["size"] < ret["size"]:
-							retlist.remove(ret)
-							retlist.insert(c,temp)
-					else:
-						retlist.append(temp)
-	 					# fix remove dupes and then call it here
-	return retlist 
 
 
 
@@ -232,12 +185,18 @@ def redoList(lst,repository):
 			name = tempstr;
 			version = ''
 			versiontype = ''
-
+		templist = []
 		for repo in repository:
 			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
 				temp = repo
 				temp["operation"] = operation
-				retlist.append(temp)
+				templist.append(temp)
+		item = templist[0]
+		if(len(templist)>1):
+			for t in templist:
+				if t["size"]<item["size"]:
+					item = t
+		retlist.append(item)
 	return retlist 
 
 # def removeMulIns():
@@ -283,31 +242,19 @@ def redoListC(lst,repository):
 			name = tempstr;
 			version = ''
 			versiontype = ''
+		templist = []
 		for repo in repository:
 			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
 				temp = repo
 				temp["operation"] = operation
-				retlist.append(temp)
+				templist.append(temp)
+		item = templist[0]
+		if(len(templist)>1):
+			for t in templist:
+				if t["size"]<item["size"]:
+					item = t
+		retlist.append(item)
 	return retlist 
-
-def removeDupes(lst):
-	retlist = []
-	for item in lst:
-		if item not in retlist:
-			retlist.append(item)
-	return retlist
-
-def removeUnecessary(lst,initial):#removes all unncessary conflicts
-	templst = initial + lst;
-	retlist = initial
-	for c,temp in enumerate(templst,0):
-		if temp["operation"] != "-":
-			retlist.append(temp)
-		else:
-			for z in templst[:(c)]:
-				if z["name"] == temp["name"] and z["operation"] != temp["operation"]:
-					retlist.append(z)
-	return retlist
 
 
 
@@ -329,18 +276,16 @@ def main():
 	initial = redoList(initial,repository)
 	init = initial 
 
-	constraints = redoListF(constraints,repository)
+	constraints = redoList(constraints,repository)
 	constrList = control(initial,constraints,repository)
+
 	finallist = []
-	constrList = removeDupes(constrList)
-
-	constrList = removeUnecessary(constrList,initial)
-
 	for c in constrList:
 		temp = c["operation"]+c["name"]+"="+c["version"]
 		finallist.append(temp);
 
 	print(json.dumps(finallist))
+
 
 
 	

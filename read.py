@@ -154,7 +154,7 @@ def control(previous,inputlst,repository):
 					inputlst = temp + inputlst
 	return inputlst
 
-def redoList(lst,repository):
+def redoListF(lst,repository):
 	retlist = []
 	for item in lst:
 		if "operation" not in item:
@@ -201,6 +201,48 @@ def redoList(lst,repository):
 						# fix remove dupes and then call it here
 	return retlist 
 
+
+
+
+def redoList(lst,repository):
+	retlist = []
+	for item in lst:
+		if "operation" not in item:
+			if(item[0] == '+' or item[0] == '-'):
+				operation = item[0]
+				tempstr = item[1:]
+			else:
+				operation = "+"
+				tempstr = item
+		if ">=" in tempstr:
+			versiontype = ">="
+			name, version = tempstr.split(">=")
+		elif "<=" in tempstr:
+			versiontype = "<="
+			name, version = tempstr.split("<=")
+		elif ">" in tempstr:
+			versiontype = ">"
+			name, version = tempstr.split(">")
+		elif "<" in tempstr:
+			versiontype = "<"
+			name, version = tempstr.split("<")
+		elif "=" in tempstr:
+			versiontype = "=="
+			name, version = tempstr.split("=")
+		else:
+			name = tempstr;
+			version = ''
+			versiontype = ''
+
+		for repo in repository:
+			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
+				temp = repo
+				temp["operation"] = operation
+				retlist.append(temp)
+	return retlist 
+
+# def removeMulIns():
+
 def solve(ver1,vert,ver2,):
 	s1="\""+str(ver1)+"\""
 	s2="\""+str(ver2)+"\""
@@ -246,15 +288,7 @@ def redoListC(lst,repository):
 			if (repo["name"] == name and (versiontype =='' or solve(str(repo["version"]), versiontype, str(version)))):
 				temp = repo
 				temp["operation"] = operation
-				if len(retlist)==0:
-					retlist.append(temp)
-				for c,ret in enumerate(retlist,0):
-					if  temp["name"]==ret["name"]:
-						if temp["size"] < ret["size"]:
-							retlist.remove(ret)
-							retlist.insert(c,temp)
-					else:
-						retlist.append(temp)
+				retlist.append(temp)
 	return retlist 
 
 def removeDupes(lst):
@@ -293,8 +327,8 @@ def main():
 	initial = (args.initial_arg)
 	constraints = (args.constraints_arg)
 
-	initial = redoList(initial,repository)
-	constraints = redoList(constraints,repository)
+	initial = redoListF(initial,repository)
+	constraints = redoListF(constraints,repository)
 	constrList = control(initial,constraints,repository)
 	finallist = []
 
